@@ -1,0 +1,5 @@
+chalice==1.26.6
+pytest
+black
+pylint
+
