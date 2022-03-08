@@ -1,93 +1,99 @@
-from sqlalchemy import create_engine, Column, String, TIMESTAMP
+from sqlalchemy import create_engine, Column, TIMESTAMP, TEXT
 from sqlalchemy.dialects.postgresql import UUID, JSONB
 from sqlalchemy.sql import func
 from sqlalchemy.ext.declarative import declarative_base  
 from sqlalchemy.orm import session, sessionmaker
 from sqlalchemy.sql.schema import ForeignKey
-from sqlalchemy.sql.sqltypes import ARRAY
+from sqlalchemy.sql.sqltypes import ARRAY, Integer
 
 import uuid
 from datetime import datetime
 
-db_string = 'postgresql://localhost/winstepsepa?user=raghuveernaraharisetti'
 base = declarative_base()
-db = create_engine(db_string, pool_pre_ping=True, connect_args={'options': '-csearch_path={}'.format('public')})
-Session = sessionmaker(db)
-session = Session()
 
-class School(base):
-    __table_name__ = "School"
+
+class ToDictMixin:
+    @property
+    def serialize(self):
+        result = {}
+        for col in self._model_cols:  # type: ignore
+            value = getattr(self, col, None)
+            result[col] = str(value)
+        return result
+
+class School(base, ToDictMixin):
+    __tablename__ = "School"
+    _model_cols = ["id", "name"]
     id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
-    name = Column(String)
+    name = Column(TEXT)
 
-class Study(base):
-    __table_name__ = "Study"
+class Study(base, ToDictMixin):
+    __tablename__ = "Study"
+    _model_cols = ["id", "title", "name", "createdDate", "description", "organism"]
     id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
-    title = Column(String, nullable=False)
-    name = Column(String, nullable=False)
-    createdDate = Column(TIMESTAMP, default=datetime.now(), nullable=False)
-    description = Column(String, nullable=False)
-    organism = Column(String, nullable=False)
-    sampleSize = Column(int, nullable=True)
+    title = Column(TEXT, nullable=False)
+    name = Column(TEXT, nullable=False)
+    createdDate = Column(TIMESTAMP(timezone=True), default=datetime.now(), nullable=False)
+    description = Column(TEXT, nullable=False)
+    organism = Column(TEXT, nullable=False)
 
-class Observations(base):
-    __table_name__ = "Observations"
+class Observations(base, ToDictMixin):
+    __tablename__ = "Observations"
     id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
     studyId = Column(UUID(as_uuid=True), ForeignKey(column="Study.id"), nullable=False)
-    name = Column(String, nullable=False)
-    type = Column(String, nullable=False)
-    collectionTime = Column(int, nullable=False)
+    name = Column(TEXT, nullable=False)
+    type = Column(TEXT, nullable=False)
+    collectionTime = Column(TIMESTAMP(timezone=True), nullable=False)
 
-class ObservationsData(base):
-    __table_name__ = "ObservationsData"
-    teamId = Column(UUID(as_uuid=True), ForeignKey("ProjectTeam.id"))
+class ObservationsData(base, ToDictMixin):
+    __tablename__ = "ObservationsData"
+    observationId = Column(UUID(as_uuid=True), primary_key=True)
+    teamId = Column(UUID(as_uuid=True), ForeignKey("ProjectTeam.id"), primary_key=True)
     value = Column(JSONB, nullable=False)
-    collectedAt = Column(TIMESTAMP, default=datetime.now(), nullable=False)
+    collectedAt = Column(TIMESTAMP(timezone=True), default=datetime.now(), nullable=False)
 
-class Student(base):
-    __table_name__ = "Student"
+class Student(base, ToDictMixin):
+    __tablename__ = "Student"
     id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
     schoolId = Column(UUID(as_uuid=True), ForeignKey(column="School.id"), nullable=False, )
-    firstName = Column(String, nullable=False)
-    lastName = Column(String, nullable=False)
-    pronous = Column(String, nullable=False)
+    firstName = Column(TEXT, nullable=False)
+    lastName = Column(TEXT, nullable=False)
+    pronous = Column(TEXT, nullable=False)
 
-class Researcher(base):
-    __table_name__ = "Researcher"
+class Researcher(base, ToDictMixin):
+    __tablename__ = "Researcher"
     id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
     schoolId = Column(UUID(as_uuid=True), ForeignKey(column="School.id"),nullable=False, )
-    firstName = Column(String, nullable=False)
-    lastName = Column(String, nullable=False)
+    firstName = Column(TEXT, nullable=False)
+    lastName = Column(TEXT, nullable=False)
 
-class Instructor(base):
-    __table_name__ = "Instructor"
+class Instructor(base, ToDictMixin):
+    __tablename__ = "Instructor"
     id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
     schoolId = Column(UUID(as_uuid=True), ForeignKey(column="School.id"), nullable=False, )
-    firstName = Column(String, nullable=False)
-    lastName = Column(String, nullable=False)
+    firstName = Column(TEXT, nullable=False)
+    lastName = Column(TEXT, nullable=False)
 
-class ExperimentGroups(base):
-    __table_name__ = "ExperimentGroups"
+class ExperimentGroups(base, ToDictMixin):
+    __tablename__ = "ExperimentGroups"
     id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
-    name = Column(String, nullable=False)
+    name = Column(TEXT, nullable=False)
     observationIds = Column(ARRAY(UUID(as_uuid=True)), nullable=False)
 
-class Project(base):
-    __table_name__ = "Project"
+class Project(base, ToDictMixin):
+    __tablename__ = "Project"
     id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
     studyId = Column(UUID(as_uuid=True), ForeignKey(column="Study.id"))
     instructorId = Column(UUID(as_uuid=True), ForeignKey(column="Instructor.id"))
-    experimentGroups = Column(ARRAY(UUID(as_uuid=True)))
+    experimentGroups = Column(ARRAY(UUID(as_uuid=True)), default=[])
 
-class ProjectTeam(base):
-    __table_name__ = "ProjectTeam"
+class ProjectTeam(base, ToDictMixin):
+    __tablename__ = "ProjectTeam"
     id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
-    projectId = Column(UUID(as_uuid=True), ForeignKey(column="Project.id"))
-    status = Column(String, nullable=False)
-    name = Column(String, nullable=False)
-    studentIds = Column(ARRAY(UUID(as_uuid=True)), nullable=False)
-    startDate = Column(TIMESTAMP, nullable=False)
-    endDate = Column(TIMESTAMP, nullable=True)
-    academicYearRangeStart = Column(int, nullable=False)
-    academicYearRangeEnd = Column(int, nullable=False)
+    projectId = Column(UUID(as_uuid=True), ForeignKey(column="Project.id"), nullable=False)
+    status = Column(TEXT, nullable=False)
+    name = Column(TEXT, nullable=False)
+    studentIds = Column(ARRAY(UUID(as_uuid=True)), nullable=False, default=[])
+    startDate = Column(TIMESTAMP(timezone=True), nullable=False)
+    endDate = Column(TIMESTAMP(timezone=True), nullable=True)
 

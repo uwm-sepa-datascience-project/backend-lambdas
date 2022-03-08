@@ -1,0 +1,40 @@
+Required API Endpoints
+
+Each person will have a userid associated (userid is comming from the authentication service)
+All the apis have access to this id
+
+COMMON
+
+1. Get the student id for given email
+2. All observationIds for given study -> /getObservationsForStudy/{studyid}
+
+Instructor Dashboard
+1. List all teams  -> /getTeams/{projectid}
+2. Edit actions on a team
+	1. TBD
+3. View Results -> /getObservationData/{teamid}
+	Will give all the observation data points that are associated with this team
+4. Create Team
+	1. Team Name
+	2. Project id/name
+	3. status -> infer -> something like "on going"
+	4. Student Ids
+	5. Start data -> end date -> infer
+	6. academicYearRangeStart -> academicYearRangeEnd -> infer
+5. List all Projects -> /instructor/getProjects
+6. List all Project Teams -> /getTeams/{projectid}
+7. Create Project
+	1. Name
+	2. Study ID
+	3. Description
+	4. ExperimentGroups
+		1. name
+		2. observation Ids
+
+Student Dashboard
+
+1. List all Project Teams
+2. View Results -> same as instructor endpoint? -> /getObservationData/{teamid}
+3. Enter Data -> ProjectId, List of (observationId, value)
+
+

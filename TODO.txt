@@ -1,0 +1,10 @@
+1. Splash screen and login
+2. Default page for the instructor is project
+	study => study type
+	view observation -> view experiment groups
+3. Change Alive to YES/NO
+4. Teams
+	Grade -> class Year -> move to subtext under team name
+	new column for the Study
+5. Create Team
+	Year -> class Year
