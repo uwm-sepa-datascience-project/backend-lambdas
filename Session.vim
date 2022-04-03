@@ -10,7 +10,7 @@ endif
 set shortmess=aoO
 argglobal
 %argdel
-$argadd ./
+$argadd ~/uwm-sepa-datascience/backend/backend-lambdas
 edit winstep-api/chalicelib/dbmodels.py
 let s:save_splitbelow = &splitbelow
 let s:save_splitright = &splitright
@@ -25,7 +25,7 @@ set winheight=1
 set winminwidth=0
 set winwidth=1
 argglobal
-balt winstep-api/app.py
+balt winstep-api/requirements.txt
 setlocal fdm=manual
 setlocal fde=0
 setlocal fmr={{{,}}}
@@ -36,16 +36,23 @@ setlocal fdn=20
 setlocal fen
 silent! normal! zE
 let &fdl = &fdl
-let s:l = 6 - ((5 * winheight(0) + 22) / 44)
+let s:l = 1 - ((0 * winheight(0) + 19) / 39)
 if s:l < 1 | let s:l = 1 | endif
 keepjumps exe s:l
 normal! zt
-keepjumps 6
+keepjumps 1
 normal! 0
 tabnext 1
-badd +1 ./
-badd +4 winstep-api/app.py
-badd +6 winstep-api/chalicelib/dbmodels.py
+badd +1 ~/uwm-sepa-datascience/backend/backend-lambdas
+badd +36 winstep-api/chalicelib/db_utils.py
+badd +3 winstep-api/chalicelib/dbmodels.py
+badd +135 winstep-api/app.py
+badd +1 winstep-api/chalicelib/api_models.py
+badd +7 TODO.txt
+badd +1 Session.vim
+badd +28 winstep-api/TODO.txt
+badd +15 winstep-api/tests/test_db.py
+badd +1 winstep-api/tests/test_app.py
 badd +1 requirements.txt
 badd +1 README.md
 badd +1 winstep-api/requirements.txt
@@ -63,7 +70,6 @@ if filereadable(s:sx)
 endif
 let &g:so = s:so_save | let &g:siso = s:siso_save
 set hlsearch
-nohlsearch
 let g:this_session = v:this_session
 let g:this_obsession = v:this_session
 doautoall SessionLoadPost

@@ -5,6 +5,7 @@ from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import session, sessionmaker
 from sqlalchemy.sql.schema import ForeignKey
 from sqlalchemy.sql.sqltypes import ARRAY, Integer
+from sqlalchemy.orm import relationship
 
 import uuid
 from datetime import datetime
@@ -39,10 +40,12 @@ class Study(base, ToDictMixin):
 
 class Observations(base, ToDictMixin):
     __tablename__ = "Observations"
+    _model_cols = ["id", "studyId", "name", "type", "label", "collectionTime"]
     id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
     studyId = Column(UUID(as_uuid=True), ForeignKey(column="Study.id"), nullable=False)
     name = Column(TEXT, nullable=False)
     type = Column(TEXT, nullable=False)
+    label = Column(TEXT, nullable=False)
     collectionTime = Column(TIMESTAMP(timezone=True), nullable=False)
 
 class ObservationsData(base, ToDictMixin):
@@ -51,6 +54,7 @@ class ObservationsData(base, ToDictMixin):
     teamId = Column(UUID(as_uuid=True), ForeignKey("ProjectTeam.id"), primary_key=True)
     value = Column(JSONB, nullable=False)
     collectedAt = Column(TIMESTAMP(timezone=True), default=datetime.now(), nullable=False)
+    # observation = relationship("Observations", foreign_keys=[observationId])
 
 class Student(base, ToDictMixin):
     __tablename__ = "Student"

@@ -1,1 +1,3 @@
-peewee
+sqlmodel
+pyscopg2
+

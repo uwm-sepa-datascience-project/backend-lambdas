@@ -4,7 +4,7 @@ from sqlalchemy.engine import create
 from sqlalchemy.orm import session
 from sqlalchemy.orm.session import sessionmaker
 from sqlalchemy.engine.create import create_engine
-from .dbmodels import Study
+from .dbmodels import Observations, Study
 
 db_string = 'postgresql://localhost/winstepsepa?user=raghuveernaraharisetti'
 
@@ -41,7 +41,10 @@ def is_studyid_valid(studyid, session):
     row = session.execute(query).fetchone()
     return row is not None
 
-    
-
-    
+def are_observationids_valid(ids, studyid, session):
+    query = db.select([Observations]).where(Observations.studyId==studyid)
+    rows = session.execute(query).fetchall()
+    db_ids = [row.id for row in rows]
+    invalid_ids = set(ids).difference(set(db_ids))
+    return invalid_ids == 0, list(invalid_ids)
 

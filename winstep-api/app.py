@@ -3,11 +3,15 @@ import sqlalchemy as db
 
 from chalice.app import Chalice
 from chalice.app import BadRequestError, NotFoundError
+from sqlalchemy.orm import session
 from chalicelib import db_utils
-from chalicelib.dbmodels import Observations, ObservationsData, Project, ProjectTeam, School
+from chalicelib.dbmodels import ExperimentGroups, Observations, ObservationsData, Project, ProjectTeam, School
 
 app = Chalice(app_name='winstep-api')
 
+
+def get_json_body(app):
+    return app.current_request.json_body
 
 @app.route('/')
 def index():
@@ -54,6 +58,13 @@ def get_teams(projectid):
         rows = session.execute(query).fetchall()
         return db_utils.as_api_result(rows)
 
+@app.route("/getObservations/{studyid}")
+def getObservations(studyid):
+    with db_utils.db_session() as session:
+        query = db.select([Observations]).where(Observations.studyId==studyid)
+        rows = session.execute(query).fetchall()
+        return db_utils.as_api_result(rows)
+
 @app.route("/getObservationData/{teamid}")
 def get_observation_data(teamid):
     """
@@ -69,21 +80,56 @@ def get_all_schools():
     """
     Returns all schools
     """
+    print("in the api")
     with db_utils.db_session() as session:
         query = db.select([School])
         rows = session.execute(query).fetchall()
         return db_utils.as_api_result(rows)
 
-@app.route("/newSchool")
+@app.route("/create/school",methods=["PUT"])
 def createNewSchool():
     """
     Create new school
     """
     with db_utils.db_session() as session:
         school = School()
-        school.name = "UWM"  # type: ignore
+        school.name = app.current_request.json_body['name']  # type: ignore
         session.add(school)
         session.commit()
+
+@app.route("/create/observations", methods=["PUT"])
+def createObservation():
+    req = app.current_request.json_body
+    with db_utils.db_session() as session:
+        for ob in req['observations']:
+            observation = Observations(studyId=ob['studyId'], label=ob['label'], name=ob['name'], type=ob['type'], collectionTime=ob['collectionTime'])
+            session.add(observation)
+        session.commit()
+
+@app.route("/create/project", methods=["PUT"])
+def createProject():
+    req = app.current_request.json_body
+    with db_utils.db_session() as session:
+        db_groups = []
+        for group in req['experimentGroups']:
+            db_group = ExperimentGroups(name=group['name'], observationIds=[uuid.UUID(x) for x in group['observationIds']])
+            session.add(db_group)
+            session.commit()
+            db_groups.append(db_group.id)
+        print(db_groups)
+        project = Project(studyId=req['studyId'], instructorId=req['instructorId'], experimentGroups=db_groups)
+        session.add(project)
+        session.commit()
+
+@app.route("/create/projectTeam", methods=["PUT"])
+def createProjectTeam():
+    pass
+
+def createExperimentalGroup(group):
+    """
+    Create experimentalGroups
+    """
+    return ExperimentGroups(name=group['name'], observationIds=[uuid.UUID(x) for x in group['observationIds']])
 
 # The view function above will return {"hello": "world"}
 # whenever you make an HTTP GET request to '/'.
